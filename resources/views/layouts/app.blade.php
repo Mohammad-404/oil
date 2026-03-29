@@ -432,9 +432,24 @@
             </button>
             <span class="topbar-title">@yield('page-title', 'لوحة التحكم')</span>
         </div>
-        <div class="topbar-date">
-            <i class="fas fa-calendar-alt me-1"></i>
-            {{ now()->locale('ar')->isoFormat('dddd، D MMMM YYYY') }}
+        <div class="d-flex align-items-center gap-3">
+            <div class="topbar-date">
+                <i class="fas fa-calendar-alt me-1"></i>
+                {{ now()->locale('ar')->isoFormat('dddd، D MMMM YYYY') }}
+            </div>
+            <div class="d-flex align-items-center gap-2" style="border-right:2px solid var(--olive-pale); padding-right:.75rem">
+                <span class="small fw-bold text-muted d-none d-md-inline">
+                    <i class="fas fa-user-circle me-1" style="color:var(--olive-main)"></i>
+                    {{ auth()->user()->name }}
+                </span>
+                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="تسجيل الخروج">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="d-none d-md-inline ms-1">خروج</span>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
