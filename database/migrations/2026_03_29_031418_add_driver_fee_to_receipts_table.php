@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('receipts', function (Blueprint $table) {
             // أجرة السائق — يدوية منفصلة عن أجرة العصر
-            $table->decimal('driver_fee', 10, 2)->default(0)->after('fee_per_kg');
+            $table->decimal('driver_fee', 10, 2)->default(0);
             // أجرة العصر = olive_weight_kg × fee_per_kg (محسوبة تلقائياً)
-            $table->decimal('press_fee', 10, 2)->nullable()->after('driver_fee');
+            $table->decimal('press_fee', 10, 2)->nullable();
         });
     }
 

@@ -11,17 +11,17 @@ return new class extends Migration
         Schema::table('receipts', function (Blueprint $table) {
             // طريقة الدفع: نقدي / رديات زيت / بدل تنكة
             $table->enum('payment_method', ['cash', 'oil_return', 'can'])
-                  ->default('cash')->after('total_fee');
+                  ->default('cash');
 
             // رديات الزيت — كمية الزيت التي يأخذها الزبون بدل المبلغ
-            $table->decimal('oil_return_kg', 10, 2)->default(0)->after('payment_method');
-            $table->decimal('oil_return_gram', 10, 2)->default(0)->after('oil_return_kg');
+            $table->decimal('oil_return_kg', 10, 2)->default(0);
+            $table->decimal('oil_return_gram', 10, 2)->default(0);
 
             // بدل التنكة — عدد التنك لكل حجم
-            $table->integer('can_16_count')->default(0)->after('oil_return_gram'); // 2.000 د.أ لكل واحدة
-            $table->integer('can_8_count')->default(0)->after('can_16_count');    // 1.500 د.أ لكل واحدة
-            $table->integer('can_4_count')->default(0)->after('can_8_count');    // 0.750 د.أ لكل واحدة
-            $table->decimal('can_total', 10, 3)->default(0)->after('can_4_count'); // مجموع التنك
+            $table->integer('can_16_count')->default(0); // 2.000 د.أ لكل واحدة
+            $table->integer('can_8_count')->default(0);    // 1.500 د.أ لكل واحدة
+            $table->integer('can_4_count')->default(0);    // 0.750 د.أ لكل واحدة
+            $table->decimal('can_total', 10, 3)->default(0); // مجموع التنك
         });
 
         // driver_fee موجود مسبقاً — نبقيها لكنها معلومة داخلية للمعصرة فقط

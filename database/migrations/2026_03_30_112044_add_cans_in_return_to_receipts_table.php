@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('receipts', function (Blueprint $table) {
-            $table->boolean('cans_in_return')->default(false)->after('can_total');
+            $table->boolean('cans_in_return')->default(false);
         });
     }
 

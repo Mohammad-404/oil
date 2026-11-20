@@ -10,9 +10,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('receipts', function (Blueprint $table) {
-            $table->decimal('discount_percent', 5, 2)->default(0)->after('can_total');
-            $table->decimal('discount_amount', 10, 3)->default(0)->after('discount_percent');
-            $table->decimal('discounted_can_total', 10, 3)->default(0)->after('discount_amount');
+            $table->decimal('discount_percent', 5, 2)->default(0);
+            $table->decimal('discount_amount', 10, 3)->default(0);
+            $table->decimal('discounted_can_total', 10, 3)->default(0);
         });
 
         // Existing receipts have no discount, so their payable can amount stays the same.

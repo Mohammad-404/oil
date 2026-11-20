@@ -21,3 +21,6 @@ yarn-error.log
 /*.pptx
 /generate_*.py
 /make_pptx.py
+
+.vercel
+.env.local

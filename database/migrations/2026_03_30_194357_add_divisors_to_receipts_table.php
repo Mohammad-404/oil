@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('receipts', function (Blueprint $table) {
             // N₁: مقسوم رديات الزيت بدون تنك → (زيت × سعر) ÷ N₁ = قيمة الرديات بالدينار
-            $table->decimal('oil_return_divisor', 8, 3)->default(7)->after('oil_return_gram');
+            $table->decimal('oil_return_divisor', 8, 3)->default(7);
             // N₂: مقسوم رديات الزيت مع التنك → (تنك + زيت × سعر) ÷ N₂ = قيمة الرديات بالدينار
-            $table->decimal('can_return_divisor', 8, 3)->default(7)->after('oil_return_divisor');
+            $table->decimal('can_return_divisor', 8, 3)->default(7);
         });
     }
 
