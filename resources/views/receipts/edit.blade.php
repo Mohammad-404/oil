@@ -15,9 +15,11 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">صاحب الزيتون</label>
-                    <select name="owner_id" class="form-select" required>
+                    <select name="owner_id" id="ownerSelect" class="form-select" required>
                         @foreach($owners as $owner)
-                            <option value="{{ $owner->id }}" {{ $receipt->owner_id == $owner->id ? 'selected' : '' }}>
+                            <option value="{{ $owner->id }}"
+                                    data-floor="{{ $owner->floor_number }}"
+                                    {{ $receipt->owner_id == $owner->id ? 'selected' : '' }}>
                                 {{ $owner->name }} - {{ $owner->city }}
                             </option>
                         @endforeach
@@ -29,19 +31,20 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">رقم الدور</label>
-                    <input type="number" name="floor_number" class="form-control" value="{{ $receipt->floor_number }}">
+                    <input type="number" name="floor_number" id="floorInput" class="form-control" value="{{ $receipt->floor_number }}" readonly>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">الزيتون (كيلو)</label>
-                    <input type="number" name="olive_weight_kg" id="oliveWeight" step="0.1" class="form-control" value="{{ $receipt->olive_weight_kg }}" required>
+                    <input type="number" name="olive_weight_kg" step="0.1" class="form-control" value="{{ $receipt->olive_weight_kg }}" required>
                 </div>
+                @if(auth()->user()->isCashier())
                 <div class="col-md-3">
                     <label class="form-label">كمية الزيت (كيلو)</label>
-                    <input type="number" name="oil_weight_kg" step="0.1" class="form-control" value="{{ $receipt->oil_weight_kg }}">
+                    <input type="number" name="oil_weight_kg" id="oilWeightKg" step="0.1" class="form-control" value="{{ $receipt->oil_weight_kg }}">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">الزيت (غرام)</label>
-                    <input type="number" name="oil_weight_gram" step="1" class="form-control" value="{{ $receipt->oil_weight_gram }}">
+                    <input type="number" name="oil_weight_gram" id="oilWeightGm" step="1" class="form-control" value="{{ $receipt->oil_weight_gram }}">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">الأجرة / كيلو</label>
@@ -60,8 +63,31 @@
                         <option value="pending"    {{ $receipt->status=='pending'    ? 'selected':'' }}>في الانتظار</option>
                         <option value="processing" {{ $receipt->status=='processing' ? 'selected':'' }}>قيد المعالجة</option>
                         <option value="completed"  {{ $receipt->status=='completed'  ? 'selected':'' }}>مكتمل</option>
+                        <option value="debt"       {{ $receipt->status=='debt'       ? 'selected':'' }}>دَين</option>
                     </select>
                 </div>
+                @else
+                {{-- اليوزر العادي: يعدل الحالة فقط بين الانتظار والمعالجة --}}
+                <input type="hidden" name="oil_weight_kg"   value="{{ $receipt->oil_weight_kg }}">
+                <input type="hidden" name="oil_weight_gram" value="{{ $receipt->oil_weight_gram }}">
+                <input type="hidden" name="fee_per_kg"      value="{{ $receipt->fee_per_kg }}">
+                <div class="col-md-4">
+                    <label class="form-label">الحالة</label>
+                    @if(in_array($receipt->status, ['pending', 'processing']))
+                        <select name="status" class="form-select">
+                            <option value="pending"    {{ $receipt->status=='pending'    ? 'selected':'' }}>في الانتظار</option>
+                            <option value="processing" {{ $receipt->status=='processing' ? 'selected':'' }}>قيد المعالجة</option>
+                        </select>
+                    @else
+                        <select name="status" class="form-select">
+                            <option value="{{ $receipt->status }}" selected>{{ $receipt->status_label }} (الحالي)</option>
+                            <option value="pending">في الانتظار</option>
+                            <option value="processing">قيد المعالجة</option>
+                        </select>
+                        <small class="text-muted">يمكن إعادة الحالة إلى: في الانتظار أو قيد المعالجة فقط</small>
+                    @endif
+                </div>
+                @endif
                 <div class="col-12">
                     <label class="form-label">ملاحظات</label>
                     <textarea name="notes" class="form-control" rows="2">{{ $receipt->notes }}</textarea>
@@ -81,12 +107,21 @@
 @endsection
 @section('scripts')
 <script>
-    document.getElementById('oliveWeight').addEventListener('input', calc);
-    document.getElementById('feePerKg').addEventListener('input', calc);
+    // رقم الدور يتغير تلقائياً مع صاحب الزيتون
+    document.getElementById('ownerSelect').addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        document.getElementById('floorInput').value = opt.dataset.floor || '';
+    });
+
+    // حساب المجموع
+    ['oilWeightKg','oilWeightGm','feePerKg'].forEach(function(id) {
+        document.getElementById(id)?.addEventListener('input', calc);
+    });
     function calc() {
-        const w = parseFloat(document.getElementById('oliveWeight').value)||0;
-        const f = parseFloat(document.getElementById('feePerKg').value)||0;
-        document.getElementById('totalFee').value = (w*f).toFixed(2);
+        const kg  = parseFloat(document.getElementById('oilWeightKg').value) || 0;
+        const gm  = parseFloat(document.getElementById('oilWeightGm').value) || 0;
+        const fee = parseFloat(document.getElementById('feePerKg').value)    || 0;
+        document.getElementById('totalFee').value = ((kg + gm / 1000) * fee).toFixed(3);
     }
 </script>
 @endsection

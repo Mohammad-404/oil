@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'معصرة ربوع الثمرة الحديث') - نظام الإدارة</title>
+    <title>@yield('title', $pressName) - نظام الإدارة</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -202,7 +202,34 @@
             border: none;
             border-radius: 14px;
             box-shadow: 0 2px 14px rgba(0,0,0,.07);
-            overflow: hidden;
+            overflow: clip;
+        }
+
+        /* ===== MOBILE TABLE SCROLL ===== */
+        .table-responsive {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ===== MOBILE RESPONSIVE ===== */
+        @media (max-width: 767.98px) {
+            .page-content { padding: .85rem .6rem; }
+
+            /* إخفاء التاريخ في الـ topbar على الموبايل */
+            .topbar-date { display: none !important; }
+
+            /* الـ topbar أكثر اتساعاً */
+            #topbar { padding: .6rem .9rem; }
+            .topbar-title { font-size: 1rem; }
+
+            /* sub-menu أزرار الكاشير تلتف بشكل صحيح */
+            .cashier-search-box .d-flex.gap-2 {
+                flex-wrap: wrap;
+                justify-content: center !important;
+            }
+            .cashier-search-box .btn { flex: 1 1 auto; min-width: 120px; }
+
+            /* حالة الإيصالات — 2 في الصف */
+            .status-badges-grid { grid-template-columns: 1fr 1fr !important; }
         }
 
         .card-header {
@@ -291,6 +318,7 @@
         .badge-pending    { background: #fef3c7; color: #92400e; font-weight: 700; }
         .badge-processing { background: #dbeafe; color: #1e40af; font-weight: 700; }
         .badge-completed  { background: #d1fae5; color: #065f46; font-weight: 700; }
+        .badge-debt       { background: #dc2626; color: #fff;    font-weight: 700; }
 
         /* ===== BUTTONS ===== */
         .btn-olive {
@@ -368,6 +396,40 @@
             #main-content { margin-right: 0; }
             .press-header-info .press-name { font-size: 1.1rem; }
         }
+
+        /* زر إغلاق الـ sidebar */
+        #sidebar-close {
+            display: none;
+            position: absolute;
+            top: .6rem;
+            left: .7rem;
+            z-index: 10;
+            background: rgba(255,255,255,.12);
+            border: none;
+            color: #fff;
+            border-radius: 8px;
+            width: 34px; height: 34px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: background .2s;
+        }
+        #sidebar-close:hover { background: rgba(255,255,255,.22); }
+        @media (max-width: 768px) {
+            #sidebar-close { display: flex; }
+            #sidebar { position: fixed; }
+        }
+
+        /* Overlay خلف الـ sidebar */
+        #sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 999;
+        }
+        #sidebar-overlay.show { display: block; }
     </style>
 
     @yield('styles')
@@ -376,49 +438,91 @@
 
 <!-- ===== TOP PRESS HEADER ===== -->
 <div id="press-header">
-    <div class="press-header-logo">🫒</div>
+    <div class="press-header-logo"><i class="fas fa-leaf" style="color:#6aab30"></i></div>
     <div class="press-header-divider"></div>
     <div class="press-header-info">
-        <div class="press-name">معصرة ربوع الثمرة الحديث</div>
+        <div class="press-name">{{ $pressName }}</div>
+        @if($pressPhone)
         <div class="press-phones">
             <i class="fas fa-phone-alt"></i>
-            <span dir="ltr">0785099961 &nbsp;/&nbsp; 0785365419 &nbsp;/&nbsp; 0785766009</span>
+            <span dir="ltr">{{ $pressPhone }}</span>
         </div>
+        @endif
     </div>
     <div class="press-header-divider"></div>
-    <div class="press-header-logo">🫒</div>
+    <div class="press-header-logo"><i class="fas fa-leaf" style="color:#6aab30"></i></div>
 </div>
+
+<!-- Overlay يغلق الـ sidebar عند الضغط خارجه -->
+<div id="sidebar-overlay"></div>
 
 <!-- ===== SIDEBAR ===== -->
 <nav id="sidebar">
+    <button id="sidebar-close" onclick="closeSidebar()" title="إغلاق">
+        <i class="fas fa-times"></i>
+    </button>
     <div class="sidebar-nav">
+        @if(auth()->user()->isCashier())
         <div class="nav-section-title">الرئيسية</div>
         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
             <i class="fas fa-tachometer-alt"></i> لوحة التحكم
         </a>
 
+        <div class="nav-section-title">الكاشير</div>
+        <a href="{{ route('cashier.index') }}" class="nav-link {{ request()->routeIs('cashier.index') ? 'active' : '' }}">
+            <i class="fas fa-cash-register"></i> الكاشير
+        </a>
+        <a href="{{ route('cashier.debts') }}" class="nav-link {{ request()->routeIs('cashier.debts') || request()->routeIs('cashier.debt') ? 'active' : '' }}">
+            <i class="fas fa-exclamation-triangle"></i> الديون
+            @php $debtCount = \App\Models\Receipt::where('status','debt')->count(); @endphp
+            @if($debtCount > 0)
+                <span class="badge bg-danger ms-1" style="font-size:.7rem">{{ $debtCount }}</span>
+            @endif
+        </a>
+        <a href="{{ route('cashier.oil-sales') }}" class="nav-link {{ request()->routeIs('cashier.oil-sales') ? 'active' : '' }}">
+            <i class="fas fa-bottle-droplet"></i> رديات الزيتون
+        </a>
+        <a href="{{ route('cashier.oil-trade') }}" class="nav-link {{ request()->routeIs('cashier.oil-trade*') ? 'active' : '' }}">
+            <i class="fas fa-scale-balanced"></i> بيع وشراء الزيت
+        </a>
+        <a href="{{ route('cashier.expenses') }}" class="nav-link {{ request()->routeIs('cashier.expenses*') ? 'active' : '' }}">
+            <i class="fas fa-wallet"></i> المصروفات
+        </a>
+        <a href="{{ route('cashier.driver-fees') }}" class="nav-link {{ request()->routeIs('cashier.driver-fees') ? 'active' : '' }}">
+            <i class="fas fa-truck"></i> أجور الناقلين
+        </a>
+
+        <div class="nav-section-title">الإدارة</div>
+        <a href="{{ route('receipts.index') }}" class="nav-link {{ request()->routeIs('receipts.index') ? 'active' : '' }}">
+            <i class="fas fa-chart-bar"></i> التقارير
+        </a>
+        <a href="{{ route('reports.financial') }}" class="nav-link {{ request()->routeIs('reports.financial') ? 'active' : '' }}">
+            <i class="fas fa-coins"></i> التقرير المالي
+        </a>
+        <a href="{{ route('settings') }}" class="nav-link {{ request()->routeIs('settings') ? 'active' : '' }}">
+            <i class="fas fa-cog"></i> الإعدادات
+        </a>
+
+        @else
+        {{-- يوزر عادي --}}
         <div class="nav-section-title">العمليات</div>
-        <a href="{{ route('receipts.create') }}" class="nav-link">
+        <a href="{{ route('receipts.create') }}" class="nav-link {{ request()->routeIs('receipts.create') ? 'active' : '' }}">
             <i class="fas fa-plus-circle"></i> إيصال جديد
         </a>
-        <a href="{{ route('receipts.index') }}" class="nav-link {{ request()->routeIs('receipts.*') ? 'active' : '' }}">
+        <a href="{{ route('receipts.index') }}" class="nav-link {{ request()->routeIs('receipts.index') ? 'active' : '' }}">
             <i class="fas fa-file-alt"></i> الإيصالات
         </a>
         <a href="{{ route('owners.index') }}" class="nav-link {{ request()->routeIs('owners.*') ? 'active' : '' }}">
             <i class="fas fa-users"></i> أصحاب الزيتون
         </a>
-
-        <a href="{{ route('cashier.index') }}" class="nav-link {{ request()->routeIs('cashier.*') ? 'active' : '' }}">
-            <i class="fas fa-cash-register"></i> الكاشير
+        <a href="{{ route('user.receipts') }}" class="nav-link {{ request()->routeIs('user.receipts') ? 'active' : '' }}">
+            <i class="fas fa-print"></i> طباعة الدور
         </a>
-
         <div class="nav-section-title">الإدارة</div>
-        <a href="{{ route('reports') }}" class="nav-link {{ request()->routeIs('reports') ? 'active' : '' }}">
-            <i class="fas fa-chart-bar"></i> التقارير
-        </a>
         <a href="{{ route('settings') }}" class="nav-link {{ request()->routeIs('settings') ? 'active' : '' }}">
             <i class="fas fa-cog"></i> الإعدادات
         </a>
+        @endif
     </div>
 </nav>
 
@@ -432,11 +536,17 @@
             </button>
             <span class="topbar-title">@yield('page-title', 'لوحة التحكم')</span>
         </div>
-        <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center gap-2">
             <div class="topbar-date">
                 <i class="fas fa-calendar-alt me-1"></i>
                 {{ now()->locale('ar')->isoFormat('dddd، D MMMM YYYY') }}
             </div>
+            @php $activeYear = \DB::table('settings')->where('key','active_year')->value('value'); @endphp
+            @if($activeYear && $activeYear !== 'all')
+            <div style="background:#2d5016;color:#fff;padding:3px 8px;border-radius:20px;font-size:.75rem;font-weight:700;white-space:nowrap">
+                <i class="fas fa-filter me-1 d-none d-md-inline"></i>سنة {{ $activeYear }}
+            </div>
+            @endif
             <div class="d-flex align-items-center gap-2" style="border-right:2px solid var(--olive-pale); padding-right:.75rem">
                 <span class="small fw-bold text-muted d-none d-md-inline">
                     <i class="fas fa-user-circle me-1" style="color:var(--olive-main)"></i>
@@ -467,6 +577,18 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
+        @if(session('info'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle me-2"></i>{{ session('info') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+        @if(session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show fw-bold" role="alert" style="border-right:4px solid #d97706">
+                <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
     </div>
 
     <!-- PAGE CONTENT -->
@@ -477,8 +599,26 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebar-overlay').classList.remove('show');
+    }
+
     document.getElementById('sidebarToggle')?.addEventListener('click', () => {
         document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('sidebar-overlay').classList.toggle('show');
+    });
+
+    document.getElementById('sidebar-overlay')?.addEventListener('click', closeSidebar);
+
+    // تمرير أفقي للجداول على الموبايل — يلف كل جدول بدون table-responsive تلقائياً
+    document.querySelectorAll('table.table').forEach(function(t) {
+        if (!t.closest('.table-responsive') && !t.closest('.no-scroll')) {
+            var d = document.createElement('div');
+            d.className = 'table-responsive';
+            t.parentNode.insertBefore(d, t);
+            d.appendChild(t);
+        }
     });
 </script>
 @yield('scripts')

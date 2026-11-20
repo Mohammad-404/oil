@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إنشاء حساب — معصرة ربوع الثمرة الحديث</title>
+    <title>إنشاء حساب — {{ $pressName }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -73,7 +73,7 @@
 
     <div class="auth-logo">
         <span class="olive-icon">🫒</span>
-        <div class="press-name">معصرة ربوع الثمرة الحديث</div>
+        <div class="press-name">{{ $pressName }}</div>
     </div>
 
     <div class="auth-card">
@@ -81,6 +81,19 @@
 
         <form method="POST" action="{{ route('register') }}">
             @csrf
+
+            <div class="mb-3">
+                <label class="form-label">🔑 كود الدعوة</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-key"></i></span>
+                    <input type="password" name="invite_code"
+                           class="form-control @error('invite_code') is-invalid @enderror"
+                           placeholder="أدخل كود الدعوة" required>
+                </div>
+                @error('invite_code')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
+            </div>
 
             <div class="mb-3">
                 <label class="form-label">الاسم الكامل</label>
@@ -118,13 +131,40 @@
                 @enderror
             </div>
 
-            <div class="mb-4">
+            <div class="mb-3">
                 <label class="form-label">تأكيد كلمة المرور</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                     <input type="password" name="password_confirmation" class="form-control"
                            placeholder="أعد كتابة كلمة المرور" required>
                 </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">نوع الحساب</label>
+                <div class="d-flex gap-3">
+                    <label style="flex:1;border:2px solid #dde3d5;border-radius:9px;padding:.7rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.88rem"
+                           id="lbl_user" onclick="setRole('user')">
+                        <input type="radio" name="role" value="user" checked style="display:none">
+                        <span id="dot_user" style="width:16px;height:16px;border-radius:50%;border:2px solid #6aab30;background:#6aab30;flex-shrink:0"></span>
+                        <span>
+                            <i class="fas fa-user me-1" style="color:#3d6b1a"></i>يوزر عادي
+                            <div style="font-size:.72rem;color:#888;font-weight:400">إضافة مالك وإيصالات فقط</div>
+                        </span>
+                    </label>
+                    <label style="flex:1;border:2px solid #dde3d5;border-radius:9px;padding:.7rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:.88rem"
+                           id="lbl_cashier" onclick="setRole('cashier')">
+                        <input type="radio" name="role" value="cashier" style="display:none">
+                        <span id="dot_cashier" style="width:16px;height:16px;border-radius:50%;border:2px solid #ccc;flex-shrink:0"></span>
+                        <span>
+                            <i class="fas fa-cash-register me-1" style="color:#c8952a"></i>كاشير
+                            <div style="font-size:.72rem;color:#888;font-weight:400">صلاحيات كاملة</div>
+                        </span>
+                    </label>
+                </div>
+                @error('role')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
             </div>
 
             <button type="submit" class="btn-register">
@@ -140,5 +180,25 @@
         </div>
     </div>
 
+<script>
+function setRole(role) {
+    document.querySelectorAll('[name="role"]').forEach(function(r){ r.checked = r.value === role; });
+    ['user','cashier'].forEach(function(r) {
+        var lbl = document.getElementById('lbl_'+r);
+        var dot = document.getElementById('dot_'+r);
+        if (r === role) {
+            lbl.style.borderColor = r === 'cashier' ? '#c8952a' : '#6aab30';
+            lbl.style.background  = r === 'cashier' ? '#fffbeb' : '#f0fdf4';
+            dot.style.background  = r === 'cashier' ? '#c8952a' : '#6aab30';
+            dot.style.borderColor = r === 'cashier' ? '#c8952a' : '#6aab30';
+        } else {
+            lbl.style.borderColor = '#dde3d5';
+            lbl.style.background  = '#fff';
+            dot.style.background  = 'transparent';
+            dot.style.borderColor = '#ccc';
+        }
+    });
+}
+</script>
 </body>
 </html>

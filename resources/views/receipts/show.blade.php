@@ -27,17 +27,23 @@
                     </div>
                     <div class="col-md-6">
                         <div class="p-3 rounded-3" style="background:#fff8e7; border:1px solid #fcd34d">
-                            <h6 class="fw-bold mb-3" style="color:#92400e"><i class="fas fa-weight me-2"></i>بيانات الزيتون والأجرة</h6>
+                            <h6 class="fw-bold mb-3" style="color:#92400e"><i class="fas fa-weight me-2"></i>بيانات الزيتون</h6>
                             <table class="table table-sm table-borderless mb-0">
                                 <tr><td class="text-muted">حامل الزيتون</td><td><strong>{{ $receipt->carrier_name }}</strong></td></tr>
                                 <tr><td class="text-muted">كمية الزيتون</td><td><strong class="text-success fs-5">{{ number_format($receipt->olive_weight_kg, 1) }} كيلو</strong></td></tr>
+                                @if(auth()->user()->isCashier())
                                 <tr><td class="text-muted">الأجرة/كيلو</td><td>{{ number_format($receipt->fee_per_kg, 2) }} د.أ</td></tr>
+                                @if($receipt->discount_amount > 0)
+                                <tr><td class="text-muted">قبل الخصم</td><td>{{ number_format((float)$receipt->press_fee + (float)$receipt->can_total, 3) }} د.أ</td></tr>
+                                <tr><td class="text-muted">الخصم</td><td>−{{ number_format($receipt->discount_amount, 3) }} د.أ</td></tr>
+                                @endif
                                 <tr><td class="text-muted fw-bold">إجمالي الأجرة</td><td><strong class="text-danger fs-5">{{ number_format($receipt->total_fee, 2) }} د.أ</strong></td></tr>
+                                @endif
                             </table>
                         </div>
                     </div>
 
-                    @if($receipt->oil_weight_kg)
+                    @if($receipt->oil_weight_kg && auth()->user()->isCashier())
                     <div class="col-12">
                         <div class="p-3 rounded-3" style="background:#e0f2fe; border:1px solid #7dd3fc">
                             <h6 class="fw-bold mb-2" style="color:#0c4a6e"><i class="fas fa-oil-can me-2"></i>نتيجة العصر</h6>
@@ -72,40 +78,10 @@
             </div>
         </div>
 
-        <!-- تحديث الزيت (الكاشير) -->
-        @if($receipt->status !== 'completed')
-        <div class="card">
-            <div class="card-header"><i class="fas fa-oil-can me-2"></i>تحديث نتيجة العصر (الكاشير)</div>
-            <div class="card-body">
-                <form action="{{ route('receipts.update-oil', $receipt) }}" method="POST">
-                    @csrf @method('PATCH')
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label">كمية الزيت (كيلو)</label>
-                            <input type="number" name="oil_weight_kg" class="form-control" step="0.1"
-                                   value="{{ $receipt->oil_weight_kg }}" placeholder="0.0">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">الباقي (غرام)</label>
-                            <input type="number" name="oil_weight_gram" class="form-control" step="1"
-                                   value="{{ $receipt->oil_weight_gram }}" placeholder="0">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">الحالة</label>
-                            <select name="status" class="form-select">
-                                <option value="pending"    {{ $receipt->status=='pending'    ? 'selected':'' }}>في الانتظار</option>
-                                <option value="processing" {{ $receipt->status=='processing' ? 'selected':'' }}>قيد المعالجة</option>
-                                <option value="completed"  {{ $receipt->status=='completed'  ? 'selected':'' }}>مكتمل</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-olive w-100">
-                                <i class="fas fa-save me-1"></i>حفظ
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+        @if($receipt->status === 'pending' && auth()->user()->isCashier())
+        <div class="alert" style="background:#fff8e1;border:1px solid #f0c040;border-radius:10px;font-size:.88rem;color:#7a5c00">
+            <i class="fas fa-info-circle me-1"></i>
+            هذا الإيصال في الانتظار — كمية الزيت والأجرة تُدخل عند <a href="{{ route('cashier.index', ['floor_number' => $receipt->floor_number]) }}" class="fw-bold" style="color:#7a5c00">الكاشير</a>.
         </div>
         @endif
     </div>
@@ -118,9 +94,11 @@
                 <a href="{{ route('receipts.print', $receipt) }}" class="btn btn-info text-white" target="_blank">
                     <i class="fas fa-print me-2"></i>طباعة الإيصال
                 </a>
+                @if(auth()->user()->isCashier())
                 <a href="{{ route('receipts.pdf', $receipt) }}" class="btn btn-danger">
                     <i class="fas fa-file-pdf me-2"></i>تحميل PDF
                 </a>
+                @endif
                 <a href="{{ route('receipts.edit', $receipt) }}" class="btn btn-warning text-white">
                     <i class="fas fa-edit me-2"></i>تعديل الإيصال
                 </a>
@@ -131,14 +109,24 @@
                 <a href="{{ route('receipts.index') }}" class="btn btn-light">
                     <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
                 </a>
+                @if(auth()->user()->isCashier())
                 <hr>
+                @if($receipt->status === 'pending')
                 <form action="{{ route('receipts.destroy', $receipt) }}" method="POST"
-                      onsubmit="return confirm('هل أنت متأكد من حذف هذا الإيصال؟')">
+                      onsubmit="return confirm('هل أنت متأكد من حذف الإيصال رقم {{ $receipt->receipt_number }}؟')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-outline-danger w-100">
                         <i class="fas fa-trash me-2"></i>حذف الإيصال
                     </button>
                 </form>
+                @else
+                <div class="alert alert-warning py-2 text-center" style="font-size:.83rem">
+                    <i class="fas fa-lock me-1"></i>
+                    لا يمكن حذف هذا الإيصال<br>
+                    <small>الحذف مسموح فقط للإيصالات قيد الانتظار</small>
+                </div>
+                @endif
+                @endif
             </div>
         </div>
 

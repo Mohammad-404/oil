@@ -15,3 +15,9 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+/.claude
+/deployment
+/*.zip
+/*.pptx
+/generate_*.py
+/make_pptx.py

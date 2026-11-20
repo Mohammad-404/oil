@@ -53,6 +53,13 @@
             <a href="{{ route('owners.edit', $owner) }}" class="btn btn-warning text-white">
                 <i class="fas fa-edit me-2"></i>تعديل البيانات
             </a>
+            <form action="{{ route('owners.destroy', $owner) }}" method="POST" class="d-inline"
+                  onsubmit="return confirm('هل أنت متأكد من حذف هذا الشخص وكل إيصالاته؟')">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="fas fa-trash me-2"></i>حذف
+                </button>
+            </form>
         </div>
     </div>
 

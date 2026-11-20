@@ -32,13 +32,19 @@ class Owner extends Model
         return $this->hasMany(Receipt::class);
     }
 
-    public function getTotalOliveWeightAttribute()
+    public function getTotalOliveWeightAttribute(): float
     {
-        return $this->receipts->sum('olive_weight_kg');
+        if ($this->relationLoaded('receipts')) {
+            return (float) $this->receipts->sum('olive_weight_kg');
+        }
+        return (float) $this->receipts()->sum('olive_weight_kg');
     }
 
-    public function getTotalFeesAttribute()
+    public function getTotalFeesAttribute(): float
     {
-        return $this->receipts->sum('total_fee');
+        if ($this->relationLoaded('receipts')) {
+            return (float) $this->receipts->sum('total_fee');
+        }
+        return (float) $this->receipts()->sum('total_fee');
     }
 }

@@ -10,61 +10,46 @@ use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Register Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles the registration of new users as well as their
-    | validation and creation. By default this controller uses a trait to
-    | provide this functionality without requiring any additional code.
-    |
-    */
-
     use RegistersUsers;
 
-    /**
-     * Where to redirect users after registration.
-     *
-     * @var string
-     */
     protected $redirectTo = '/';
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         $this->middleware('guest');
     }
 
-    /**
-     * Get a validator for an incoming registration request.
-     *
-     * @return \Illuminate\Contracts\Validation\Validator
-     */
+    const INVITE_CODE = 'RBS@2026';
+
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'invite_code' => ['required', 'in:' . self::INVITE_CODE],
+            'name'        => ['required', 'string', 'max:255'],
+            'email'       => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password'    => ['required', 'string', 'min:8', 'confirmed'],
+            'role'        => ['required', 'in:cashier,user'],
+        ], [
+            'invite_code.required' => 'كود الدعوة مطلوب.',
+            'invite_code.in'       => 'كود الدعوة غير صحيح.',
         ]);
     }
 
-    /**
-     * Create a new user instance after a valid registration.
-     *
-     * @return User
-     */
     protected function create(array $data)
     {
         return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
+            'name'     => $data['name'],
+            'email'    => $data['email'],
             'password' => Hash::make($data['password']),
+            'role'     => $data['role'],
         ]);
+    }
+
+    protected function registered($request, $user)
+    {
+        if ($user->role === 'user') {
+            return redirect()->route('receipts.index');
+        }
+        return redirect()->intended('/');
     }
 }

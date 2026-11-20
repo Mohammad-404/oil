@@ -4,12 +4,17 @@
 
 @section('content')
 <div class="row justify-content-center">
-<div class="col-lg-8">
+<div class="col-lg-7">
 <div class="card">
     <div class="card-header">
-        <i class="fas fa-plus-circle me-2"></i>استمارة استلام الزيتون
+        <i class="fas fa-plus-circle me-2"></i>استمارة استلام الزيتون — حجز الدور
     </div>
     <div class="card-body">
+        <div class="alert" style="background:#fff8e1; border:1px solid #f0c040; border-radius:10px; font-size:.88rem; color:#7a5c00">
+            <i class="fas fa-info-circle me-1"></i>
+            هذا الإيصال <strong>حجز دور فقط</strong>. كمية الزيت والأجرة تُسجَّل لاحقاً عند الكاشير.
+        </div>
+
         <form action="{{ route('receipts.store') }}" method="POST">
             @csrf
 
@@ -52,28 +57,27 @@
                 </div>
 
                 <!-- حامل الزيتون + رقم الدور -->
-                <div class="col-md-6">
-                    <label class="form-label">🚚 اسم حامل الزيتون <span class="text-danger">*</span></label>
+                <div class="col-md-8">
+                    <label class="form-label">🚚 اسم حامل الزيتون (الناقل) <span class="text-danger">*</span></label>
                     <input type="text" name="carrier_name" class="form-control @error('carrier_name') is-invalid @enderror"
                            value="{{ old('carrier_name') }}" placeholder="اسم الشخص الذي أحضر الزيتون" required>
                     @error('carrier_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">🏢 رقم الدور</label>
                     <input type="number" name="floor_number" class="form-control" value="{{ old('floor_number') }}" id="floorInput" readonly>
                 </div>
 
-                <!-- ── كميات الزيتون ── -->
+                <!-- كمية الزيتون -->
                 <div class="col-12"><hr class="my-1">
-                    <h6 class="fw-bold mb-0" style="color:var(--olive-dark)">🫒 كميات الزيتون</h6>
+                    <h6 class="fw-bold mb-0" style="color:var(--olive-dark)">🫒 كمية الزيتون الواردة</h6>
                 </div>
 
-                <!-- كمية الزيتون الواردة -->
                 <div class="col-md-6">
-                    <label class="form-label">كمية الزيتون الواردة (كيلو) <span class="text-danger">*</span></label>
+                    <label class="form-label">كمية الزيتون (كيلو) <span class="text-danger">*</span></label>
                     <div class="input-group">
-                        <input type="number" name="olive_weight_kg" step="0.1" min="0"
+                        <input type="number" name="olive_weight_kg" step="0.1" min="0.1"
                                class="form-control @error('olive_weight_kg') is-invalid @enderror"
                                value="{{ old('olive_weight_kg') }}" placeholder="0.0" required>
                         <span class="input-group-text">كيلو</span>
@@ -81,54 +85,7 @@
                     @error('olive_weight_kg')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                 </div>
 
-                <!-- كمية الزيت المعصور - كيلو -->
-                <div class="col-md-3">
-                    <label class="form-label">🫙 كمية الزيت المعصور</label>
-                    <div class="input-group">
-                        <input type="number" name="oil_weight_kg" step="1" min="0"
-                               class="form-control @error('oil_weight_kg') is-invalid @enderror"
-                               value="{{ old('oil_weight_kg') }}" placeholder="0">
-                        <span class="input-group-text">كيلو</span>
-                    </div>
-                    @error('oil_weight_kg')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                </div>
-
-                <!-- كسور الزيت - غرام -->
-                <div class="col-md-3">
-                    <label class="form-label">كسور الزيت</label>
-                    <div class="input-group">
-                        <input type="number" name="oil_weight_gram" step="1" min="0" max="999"
-                               class="form-control @error('oil_weight_gram') is-invalid @enderror"
-                               value="{{ old('oil_weight_gram') }}" placeholder="0">
-                        <span class="input-group-text">غم</span>
-                    </div>
-                    @error('oil_weight_gram')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                </div>
-
-                <!-- ── الأجرة ── -->
-                <div class="col-12"><hr class="my-1">
-                    <h6 class="fw-bold mb-0" style="color:var(--olive-dark)">💰 الأجرة</h6>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">سعر العصر / كيلو (د.أ) <span class="text-danger">*</span></label>
-                    <div class="input-group">
-                        <input type="number" name="fee_per_kg" id="feePerKg" step="0.001" min="0"
-                               class="form-control" value="{{ old('fee_per_kg', $fee_per_kg) }}" placeholder="0.000">
-                        <span class="input-group-text">د.أ / كيلو</span>
-                    </div>
-                    <div class="form-text text-muted">أجرة العصر = كمية الزيتون × هذا السعر</div>
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label">أجرة السائق (د.أ)</label>
-                    <div class="input-group">
-                        <input type="number" name="driver_fee" id="driverFee" step="0.01" min="0"
-                               class="form-control" value="{{ old('driver_fee', 0) }}" placeholder="0.00">
-                        <span class="input-group-text">د.أ</span>
-                    </div>
-                    <div class="form-text text-muted">تُدخل يدوياً — الحساب الكامل يظهر عند الكاشير</div>
-                </div>
+                <input type="hidden" name="fee_per_kg" value="{{ $fee_per_kg }}">
 
                 <!-- ملاحظات -->
                 <div class="col-12">

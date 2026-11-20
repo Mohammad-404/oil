@@ -1,0 +1,11 @@
+:{$PORT:80} {
+    root * /app/public
+    encode zstd gzip
+
+    @static path *.avif *.css *.gif *.ico *.jpeg *.jpg *.js *.png *.svg *.webp *.woff *.woff2
+    header @static Cache-Control "public, max-age=604800"
+
+    php_server {
+        try_files {path} index.php
+    }
+}

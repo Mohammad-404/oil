@@ -23,12 +23,7 @@
                            value="{{ old('city') }}" placeholder="المدينة" required>
                     @error('city')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">الشارع <span class="text-danger">*</span></label>
-                    <input type="text" name="street" class="form-control @error('street') is-invalid @enderror"
-                           value="{{ old('street') }}" placeholder="الشارع" required>
-                    @error('street')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
+                <input type="hidden" name="street" value="">
                 <div class="col-md-6">
                     <label class="form-label">رقم الهاتف <span class="text-danger">*</span></label>
                     <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
